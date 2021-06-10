@@ -1,79 +1,76 @@
+import { useContext, useState, useEffect } from "react";
+import Link from 'next/link'
 import Head from 'next/head'
-import {useContext, useState, useEffect} from 'react'
-import AuthContext from "../context/AuthContext"
-import Link from "next/link"
-import {API_URL} from "../utils/urls"
 
-const useOrders = (user,getToken)=>{
-    const[orders, setOrders]=useState([])
-    const [loading, setLoading]= useState(false)
-    useEffect(()=>{
-        const fetchOrders= async()=>{
+import AuthContext from "../context/AuthContext";
+import { API_URL } from '../utils/urls'
+
+const useOrders = (user, getToken) => {
+    const [orders, setOrders] = useState([])
+    const [loading, setLoading] = useState(false)
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setLoading(true)
             if(user){
                 try{
-                    setLoading(true)
-                const token=await getToken()
-                const order_res=await fetch(`${API_URL}/orders`,{
-                    headers:{
-                        
-                            'Authorization':`Bearer ${token}`
-                        
-                    }
-                })
-                const data = await order_res.json()
-                setOrders(data)
-
-                }catch(err){
+                    const token = await getToken()
+                    const orderRes = await fetch(`${API_URL}/orders`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                    const data = await orderRes.json()
+                    setOrders(data)
+                } catch(err){
                     setOrders([])
                 }
-                setLoading(false)
             }
+            setLoading(false)
         }
+
         fetchOrders()
-    },[user])
+    }, [user])
+
+
+
     return {orders, loading}
 }
 
+export default () => {
 
+    const { user, logoutUser, getToken} = useContext(AuthContext)
 
-export default function Account (){
-    const {user,logoutUser, getToken} = useContext(AuthContext)
-    const {orders, loading} = useOrders(user,getToken)
-    //check orders
-console.log("account render orders", orders)
+    const { orders, loading } = useOrders(user, getToken)
+    
     if(!user){
         return (
-            <div><p>Please login or register</p>
-            <Link href="/"><a>Go Back</a></Link>
+            <div>
+                <p>Please Login or Register before accessing this page</p>
+                <Link href="/"><a>Go Back</a></Link>
             </div>
         )
     }
+
     return (
         <div>
             <Head>
-                <title> Account Page</title>
-                <meta name="description" content="The account page, view your account orders and logout" />
+                <title>Your Account</title>
+                <meta name="description" content="Your orders will be shown here" />
             </Head>
-            <h2>
-                Account Page
-            </h2>
-            <h3>
-                Your orders
-            </h3>
-            {loading && <p>Loading your orders</p>}
-            {orders.map(order=>
-                (<div key = {order.id}>
-                    {new Date(order.created_at).toLocaleDateString('en-EN')}
-                    {order.product.name} ${order.total} {order.status}
+            <h2>Account Page</h2>
+            
+            
+            <h3>Your Orders</h3>
+            {loading && <p>Orders are Loading</p>}
+            {orders.map(order => (
+                <div key={order.id}>
+                    {new Date(order.created_at).toLocaleDateString( 'en-EN' )} {order.product.name} ${order.total} {order.status}
                 </div>
             ))}
-            <hr/>
-            <p>Logged in as: {user.email}</p>
-            <a href="#" onClick = {logoutUser}>Logout</a>
+            <hr />
+            <p>Logged in as {user.email}</p>
+            <p><a href="#" onClick={logoutUser}>Logout</a></p>
         </div>
     )
+
 }
-
-
-
-
